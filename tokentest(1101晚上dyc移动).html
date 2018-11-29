@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>tokentest</title>
+    <style>
+        .notebox {
+            position: relative;
+            float: left;
+            width: 30vw;
+            height: 35vh;
+            border-width: 2px;
+            border-radius: 5px;
+            border-color: grey;
+            background-color: red;
+            margin-top: 10px;
+            margin-left: 10px;
+            margin-right: 30px;
+        }
+
+        .notehead {
+            height: 15%;
+            width: 100%;
+            padding-top: 10px;
+            padding-left: 10px;
+            padding-right: 2px;
+            background: #c4c4c4 linear-gradient(top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+            background: #c4c4c4 -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.8)), to(rgba(255, 255, 255, 0)));
+            background: #c4c4c4 -moz-linear-gradient(top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0));
+            text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.7);
+            font-weight: bold;
+            border: 1px solid #a8a8a8;
+            background: #c4c4c4 linear-gradient(top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+            background: #c4c4c4 -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.8)), to(rgba(255, 255, 255, 0)));
+            background: #c4c4c4 -moz-linear-gradient(top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0));
+            text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.7);
+            font-weight: bold;
+            border-radius: 5px 5px 0px 0px;
+            border: 1px solid #a8a8a8;
+            font-size: 2vh;
+        }
+
+        .headclos {
+            cursor: pointer;
+            padding: 5px;
+            color: white;
+            float: right;
+        }
+
+        .notebody {
+            height: 85%;
+            width: 100%;
+            background-color: aquamarine;
+            color: black;
+            padding-top: 10px;
+            padding-left: 10px;
+            padding-right: 2px;
+            border-radius: 0px 0px 5px 5px;
+            box-shadow: 4px 2px 6px #333333;
+        }
+
+        .noteresize {
+            float: right;
+            height: 10px;
+            width: 10px;
+            cursor: pointer;
+            margin-top: -10px;
+            background-color: red;
+        }
+
+        .type {
+            font-size: 14pt;
+        }
+    </style>
+    <script>
+        function addnewnote() {
+            var container = document.getElementById("container");
+            if (container != null) {
+                var div = document.createElement("div")
+                div.className = "notebox";
+                div.style["z-index"] = getmaxzindex();
+                container.appendChild(div);
+                var headdiv = document.createElement("div");
+                headdiv.className = "notehead";
+                headdiv.innerHTML = "<span contenteditable='ture' onblur='saveall()' margin-right:10px; z-index=9999'></span>" + "<img class='headclos' onclick='closenote(this)' src='close.png'></img>";
+                div.appendChild(headdiv);
+                var bodydiv = document.createElement("div");
+                bodydiv.className = "notebody";
+                bodydiv.setAttribute("contenteditable", "true");
+                //bodydiv.setAttribute("onblur","saveall()");
+                div.appendChild(bodydiv);
+                var resizediv = document.createElement("div");
+                resizediv.setAttribute("class", "noteresize")
+                div.appendChild(resizediv);
+                //var DivEdit=new DivEdit(div,bodydiv);
+                var DivDray = new NewDivDrag(div, headdiv);
+                //var DivResize=new NewDivResize(div,resizediv);
+            }
+        }
+        function clearall() {
+            var container = document.getElementById("container");
+            container.innerHTML = "";
+        }
+        function closenote(obj) {
+            var notediv = obj.parentNode.parentNode;//定义整个标签的节点为notediv
+            var container = document.getElementById("container");
+            container.removeChild(notediv);//清楚container中所有节点元素
+        }
+        function DivEdit(pobj, obj) {
+            var mypobj = pobj;
+            var myobj = obj;
+            obj.onmousedown = function (e) {
+                var myindex = mypobj.style["z-index"];
+                mypobj.style["z-index"] = getmaxindex(myindex);
+            }
+        }
+        //使元素位于最上层
+        var getmaxzindex = function (myindex) {
+            var index = 0
+            if (myindex) index = parseInt(myindex);
+            var container = document.getElementById("container");
+            var childs = document.getElementsByClassName("notebox");
+            //获取最大zindx
+            for (var i in childs) {
+                var obj = childs[i];
+                if (obj != null) {
+                    if (obj.style) {
+                        var tempindex = obj.style["z-index"];
+                        if (tempindex) {
+                            if (parseInt(tempindex) > index) { index = parseInt(tempindex); }
+                        }
+                    }
+                }
+            }
+            //返回最大zindx的值
+            if (myindex) {
+                if (index>parseInt(myindex) ) { return index + 1  }
+                else {return index }
+            }
+            else {
+                return index+1; }
+        }
+
+        //实现拖拽div
+        function NewDivDrag(pobj, obj) {  //pobj为整个标签，obj为选中的标签。
+            var mypobj = pobj;
+            obj.onmousedown = function (e) {
+                var myindex = mypobj.style["z-index"];
+                mypobj.style["z-index"] = getmaxzindex(myindex);
+                mypobj.x = e.clientX;
+                mypobj.y = e.clientY;
+                document.onmousemove = move;
+                document.onmouseup = end;
+            };
+            //鼠标移动
+            var move = function (e) {
+                var oleft, otop;
+                var myleft = 0
+                if (mypobj.style.left) {
+                    var myleft = parseInt(mypobj.style.left)
+                }
+                var mytop = 0
+                if (mypobj.style.top) {
+                    var mytop = parseInt(mypobj.style.top)
+                }
+                oleft = e.clientX - mypobj.x + myleft;
+                otop = e.clientY - mypobj.y + mytop;
+                mypobj.style.left = oleft + "px";
+                mypobj.style.top = otop + "px";
+                mypobj.x = e.clientX;
+                mypobj.y = e.clientY;
+            };
+            //鼠标抬起
+            var end = function (e) {
+                obj = document.onmousemove = document.onmouseup = null;
+                //saveall(); 
+            };
+        }
+            //实现改变便签大小
+            /*function NewDivResize(pobj,obj){
+
+                
+            }*/
+
+    </script>
+</head>
+
+<body>
+    <div>
+        <button class="type" onclick=addnewnote()>添加新便签</button>
+        <button calss="type" onclick=clearall()>删除全部</button>
+    </div>
+    <div id="container">
+
+    </div>
+</body>
+
+</html>
